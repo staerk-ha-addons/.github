@@ -3,6 +3,9 @@ name: Repository Updater
 
 # yamllint disable-line rule:truthy
 on:
+  push:
+    branches:
+      - main
   repository_dispatch:
     types: ["update"]
   workflow_dispatch:
@@ -13,21 +16,35 @@ jobs:
   update-readme:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout external repository
         uses: actions/checkout@v4
         with:
           repository: staerk-ha-addons/repository
+          path: external-repo
           token: ${{ secrets.PAT_TOKEN }}
 
-      - name: Create profile directory and copy README
+      - name: Checkout current repository
+        uses: actions/checkout@v4
+        with:
+          path: current-repo
+
+      - name: Copy READMEs
         run: |
-          mkdir -p profile
-          cp README.md profile/README.md
+          mkdir -p current-repo/profile
+          cp -f external-repo/README.md current-repo/README.md
+          cp -f external-repo/README.md current-repo/profile/README.md
 
       - name: Commit and push if changed
+        working-directory: current-repo
         run: |
           git config --global user.name 'GitHub Action'
           git config --global user.email 'action@github.com'
           git add README.md profile/README.md
           git diff --quiet && git diff --staged --quiet || \
-          (git commit -m ":tada: Update files" && git push)
+          (git commit -m ":tada: Update README files" && git push)
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf external-repo
+          rm -rf current-repo
