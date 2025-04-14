@@ -1,7 +1,0 @@
----
-channel: stable
-addons:
-  technitium-dns:
-    repository: staerk-ha-addons/addon-technitium-dns
-    target: technitium-dns
-    image: ghcr.io/staerk-ha-addons/technitium-dns/{arch}
